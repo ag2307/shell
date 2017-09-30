@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/hs/Documents/Projects/shell-master/shell.c
+stdio.h
+-
+stdlib.h
+-
+unistd.h
+-
+string.h
+-
+sys/types.h
+-
+signal.h
+-
+sys/wait.h
+-
+fcntl.h
+-
+termios.h
+-
+sys/stat.h
+-
+dirent.h
+-
+util.h
+/Users/hs/Documents/Projects/shell-master/util.h
+
+/Users/hs/Documents/Projects/shell-master/util.h
+
