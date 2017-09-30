@@ -447,14 +447,15 @@ int commandHandler(char *args[]) {
         }
     }
     else if (strcmp(args[0], "rmexcept") == 0) {
-        int count, i,k=0,j,l=2,flag=0;
+        int count, i,k=0,j,l=1,flag=0;
         struct dirent **files;
         char pathname[1000];
         getcwd(pathname, 1024);
         count = scandir(pathname, &files, NULL, alphasort);
         char file[20][10000] = {NULL};
-        while (args[k + 2] != NULL){
-            strcat(file[k], args[i+1]);
+        while (args[k + 1] != NULL){
+            strcat(file[k], args[k+1]);
+            //printf("%s\n",file[k]);
             k++;
         }
         /* If no files found, make a non-selectable menu item */
@@ -464,18 +465,17 @@ int commandHandler(char *args[]) {
         }
         char *args[LIMIT];
         args[0] = "rm";
-        args[1]="-v";
-        for (i = 0; i < count; ++i){
+        for (i = 2; i < count; ++i){
             flag=0;
             for(j = 0;j<k;j++){
                 if(strcmp(files[i]->d_name,file[j])==0)flag=1;
             }
-            if(flag==0){memcpy(args[l],files[j]->d_name,sizeof(files[j]->d_name));l++;}
+            if(flag==0){(args[l]=files[i]->d_name);l++;}
         }
         for(int j=0;j<l;j++)printf("%s\n",args[j]);
         commandHandler(args);
 
-    } 
+    }
     else {
         // If none of the preceding commands were used, we invoke the
         // specified program. We have to detect I/O redirection.
