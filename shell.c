@@ -181,7 +181,7 @@ void fileIO_limited(char *args[], char *inputFile, char *outputFile, int option,
 void print_to_stdout(){
     FILE *fptr;
     char c;
-    
+
        // Open file
        fptr = fopen("std_output.txt", "r");
        if (fptr == NULL)
@@ -189,7 +189,7 @@ void print_to_stdout(){
            printf("Cannot open file \n");
            exit(0);
        }
-    
+
        // Read contents from file
        c = fgetc(fptr);
        while (c != EOF)
@@ -345,7 +345,7 @@ int commandHandler(char *args[]) {
         while ((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL) numTokens++;
         commandHandler(tokens);
         printf("\n");
-    }  
+    }
     else if (strcmp(args[0], "rm") == 0) {
         char tag = NULL;
         char file[20][10000] = {NULL};
@@ -467,7 +467,7 @@ int commandHandler(char *args[]) {
         args[0] = "rm";
         for (i = 2; i < count; ++i){
             flag=0;
-            for(j = 0;j<k;j++){
+            for(j = 2;j<k;j++){
                 if(strcmp(files[i]->d_name,file[j])==0)flag=1;
             }
             if(flag==0){(args[l]=files[i]->d_name);l++;}
@@ -594,7 +594,7 @@ int main(int argc, char *argv[], char **envp) {
         // We read all the tokens of the input and pass it to our
         // commandHandler as the argument
         numTokens = 1;
-        
+
         while ((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL) numTokens++;
         //printf("%d\n", numTokens);
         commandHandler(tokens);
