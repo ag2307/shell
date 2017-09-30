@@ -10,10 +10,10 @@ Team Members:
 3) **Hiten Sethiya**: Implementation of `rm` and `rmexcept` commands with all their options.
 
 Files:
-1) `shell.c`  - main file with full shell code with signal handling, etc.\
-2) `util.h`   - supporting header file containing declaration of certain functions and variables\
-3) `Makefile` - Compilation code\
-4) `README`   - Documentation\
+1) `shell.c`  - main file with full shell code with signal handling, etc.
+2) `util.h`   - supporting header file containing declaration of certain functions and variables
+3) `Makefile` - Compilation code
+4) `README`   - Documentation
 
 Features
 ==============
@@ -22,8 +22,8 @@ Features
 
 * `ls` command shows all filed in the current directory (hidden also)
 
-* `rm` command working with `-r` , `-f` and `-v` options.
-
+* `rm` command working with `-r` , `-f` and `-v` options. 
+* `rmexcept file1 ...` command removes all files except files specified with the command.
 * `issue n` command runs the `n`th latest command in history. 
 
 * Program invocation with forking and child processes
@@ -35,5 +35,7 @@ Features
 * I/O redirection (use of `dup2` system call) limited to the following:  
         `<cmd> <args> > <output>`  
         `<cmd> <args> < <input> > <output>`
+  this means that when `input` redirection is there there should be an output redirection as well
 
 * `<program_name>` to execute <program_name> and this supports `<` and `>` redirection
+* `<program_name> m` command terminates process after `m` seconds of time consumption or earlier if program terminates   earlier.
