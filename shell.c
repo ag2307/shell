@@ -24,7 +24,7 @@ void welcomeScreen() {
     printf("\t--------------------------------------------\n");
     printf("\t             Abhinav Gupta - 150123001\n");
     printf("\t             Hiten Sethiya - 150123015\n");
-    printf("\t             Manas Daruka - 150123020\n");
+    printf("\t             Manas Daruka  - 150123020\n");
     printf("\t============================================\n");
     printf("\n\n");
 }
@@ -258,7 +258,23 @@ int commandHandler(char *args[]) {
                 i++;
             }
         }
-    } else if (strcmp(args[0], "rm") == 0) {
+    }
+    else if (strcmp(args[0], "issue") == 0) {
+        if(!args[1]){
+            printf("Not enough input arguments\n");
+            return -1;
+        }
+        char *tokens[LIMIT];
+        int numTokens;
+        int n=atoi(args[1]);
+        char *line=history[number-1-n];
+        tokens[0] = strtok(line, " \n\t");
+        numTokens = 1;
+        while ((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL) numTokens++;
+        commandHandler(tokens);
+        printf("\n");
+    }  
+    else if (strcmp(args[0], "rm") == 0) {
         char tag = NULL;
         char file[20][10000] = {NULL};
         struct stat path_stat;
@@ -357,7 +373,8 @@ int commandHandler(char *args[]) {
                 };
             }
         }
-    } else if (strcmp(args[0], "rmexcept") == 0) {
+    }
+    else if (strcmp(args[0], "rmexcept") == 0) {
         int count, i,k=0,j,l=2,flag=0;
         struct dirent **files;
         char pathname[1000];
@@ -386,7 +403,8 @@ int commandHandler(char *args[]) {
         for(int j=0;j<l;j++)printf("%s\n",args[j]);
         commandHandler(args);
 
-    } else {
+    } 
+    else {
         // If none of the preceding commands were used, we invoke the
         // specified program. We have to detect I/O redirection.
         while (args[i] != NULL) {
