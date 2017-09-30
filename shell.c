@@ -366,7 +366,7 @@ int commandHandler(char *args[]) {
         char file[20][10000] = {NULL};
         while (args[k + 1] != NULL){
             strcat(file[k], args[i+1]);
-            printf("%s\n",file[k]);
+            //printf("%s\n",file[k]);
             k++;
         }
         /* If no files found, make a non-selectable menu item */
@@ -376,12 +376,12 @@ int commandHandler(char *args[]) {
         }
         char *args[LIMIT];
         args[0] = "rm";
-        for (i = 0; i < count; ++i){
+        for (i = 2; i < count; ++i){
             flag=0;
-            for(j = 2;j<k;j++){
+            for(j = 0;j<k;j++){
                 if(strcmp(files[i]->d_name,file[j])==0)flag=1;
             }
-            if(flag==0){(args[l]=files[j]->d_name,sizeof(files[j]->d_name));l++;}
+            if(flag==0){(args[l]=files[i]->d_name);l++;}
         }
         for(int j=0;j<l;j++)printf("%s\n",args[j]);
         commandHandler(args);
