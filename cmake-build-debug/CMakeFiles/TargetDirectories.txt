@@ -1,3 +1,0 @@
-/Users/hs/Documents/Projects/shell-master/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/Users/hs/Documents/Projects/shell-master/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/hs/Documents/Projects/shell-master/cmake-build-debug/CMakeFiles/shell_master.dir
