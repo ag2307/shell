@@ -131,15 +131,12 @@ void fileIO(char *args[], char *inputFile, char *outputFile, int option) {
 /*
  * Remove Function */
 int removeFile(char *file) {
-
     int ret = remove(file);
-
     if (ret == 0) {
-        printf("File deleted successfully");
+        printf("File deleted successfully\n");
     } else {
-        printf("Error: unable to delete the file");
+        printf("Error: unable to delete the file\n");
     }
-
 }
 
 int removeDirectory(const char *path) {
@@ -177,6 +174,7 @@ int removeDirectory(const char *path) {
     }
     if (!r) {
         r = rmdir(path);
+        printf("Directory Deleted Successfully\n");
     }
     return r;
 }
@@ -262,49 +260,78 @@ int commandHandler(char *args[]) {
         }
     } else if (strcmp(args[0], "rm") == 0) {
         char tag = NULL;
-        char file[FILENAME_MAX] = {NULL};
+        char file[20][10000] = {NULL};
         struct stat path_stat;
+        int i = 0;
         if (args[1][0] == '-') {
             if (args[1][1]) {
                 // Acquire Option type
                 tag = args[1][1];
-                if(args[1][2]!=NULL){printf("rm function can use only -f,-r or -v");return -1;}
-                //Acquire File Path
-                if (strpbrk(args[2], "/")) {
-                    strcat(file, args[2]);
-                }
-                else {
-                    getcwd(file, FILENAME_MAX);
-                    strcat(file, "/");
-                    strcat(file, args[2]);
-                }
-                //Check if path is okay
-                if (stat(file, &path_stat) != 0) {
-                    printf("error\n");
+                if (args[1][2] != '\0') {
+                    printf("rm function can use only -f,-r or -v");
                     return -1;
                 }
+                //Acquire File Path
+                if (strpbrk(args[2], "/")) {
+                    while (args[i + 2] != NULL) {
+                        strcat(file[i], args[i+2]);
+                        i++;
+                    }
+                } else {
+                    while (args[i + 2] != NULL) {
+                        getcwd(file[i], 1000);
+                        strcat(file[i], "/");
+                        strcat(file[i], args[i+2]);
+                        i++;
+                    }
+                }
+
                 //Option Wise operations
                 if (tag == 'r') {
-                    if (S_ISDIR(path_stat.st_mode))removeDirectory(file);
-                    else {
-                        printf("Error : Option -r requires path to be a directory.");
-                        return -1;
+
+                    for (int j = 0; j < i; j++) {
+                        //determine information about a file based on its file path
+                        if (stat(file[j], &path_stat) != 0) {
+                            printf("error\n");
+                            return -1;
+                        }
+
+                        if (S_ISDIR(path_stat.st_mode))removeDirectory(file[j]);
+                        else {
+                            printf("Error : Option -r requires path to be a directory.");
+                            return -1;
+                        }
                     }
                 } else if (tag == 'f') {
-                    if (!S_ISREG(path_stat.st_mode)) {
-                        printf("Error : Option -f with rm requires path to be a file.");
-                        return -1;
+
+                    for (int j = 0; j < i; j++) {
+                        //determine information about a file based on its file path
+                        if (stat(file[j], &path_stat) != 0) {
+                            printf("error\n");
+                            return -1;
+                        }
+                        if (!S_ISREG(path_stat.st_mode)) {
+                            printf("Error : Option -f with rm requires path to be a file.");
+                            return -1;
+                        }
+                        remove(file[j]);
                     }
-                    removeFile(file);
                 } else if (tag == 'v') {
-                    if (!S_ISREG(path_stat.st_mode)) {
-                        printf("Error : Option -v with rm requires path to be a file.");
-                        return -1;
+                    for (int j = 0; j < i; j++) {
+                        //determine information about a file based on its file path
+                        if (stat(file[j], &path_stat) != 0) {
+                            printf("error\n");
+                            return -1;
+                        }
+
+                        if (!S_ISREG(path_stat.st_mode)) {
+                            printf("Error : Option -v with rm requires path to be a file.");
+                            return -1;
+                        }
+                        printf("%s Removed", file[j]);
+                        removeFile(file[j]);
                     }
-                    printf("%s Removed", file);
-                    removeFile(file);
-                }
-                else {
+                } else {
                     printf("Error : Invalid Option Specified: rm function can use only -f,-r or -v");
                     return -1;
                 };
@@ -312,17 +339,53 @@ int commandHandler(char *args[]) {
         }
             //if no option is specified
         else {
-            strcat(file, args[1]);
-            if (stat(file, &path_stat) != 0) {
-                printf("error\n");
-                return -1;
+            while (args[i + 1] != NULL) {
+                strcat(file[i], args[i+1]);
+                i++;
             }
-            if (S_ISREG(path_stat.st_mode))removeFile(file);
-            else {
-                printf("Error : Invalid Path");
-                return -1;
-            };
+            for (int j = 0; j < i; j++) {
+                //determine information about a file based on its file path
+                if (stat(file[j], &path_stat) != 0) {
+                    printf("error\n");
+                    return -1;
+                }
+
+                if (S_ISREG(path_stat.st_mode))removeFile(file[j]);
+                else {
+                    printf("Error : Invalid Path");
+                    return -1;
+                };
+            }
         }
+    } else if (strcmp(args[0], "rmexcept") == 0) {
+        int count, i,k=0,j,l=2,flag=0;
+        struct dirent **files;
+        char pathname[1000];
+        getcwd(pathname, 1024);
+        count = scandir(pathname, &files, NULL, alphasort);
+        char file[20][10000] = {NULL};
+        while (args[k + 2] != NULL){
+            strcat(file[k], args[i+1]);
+            k++;
+        }
+        /* If no files found, make a non-selectable menu item */
+        if (count <= 0) {
+            perror("No files in this directory\n");
+            return -1;
+        }
+        char *args[LIMIT];
+        args[0] = "rm";
+        args[1]="-v";
+        for (i = 0; i < count; ++i){
+            flag=0;
+            for(j = 0;j<k;j++){
+                if(strcmp(files[i]->d_name,file[j])==0)flag=1;
+            }
+            if(flag==0){memcpy(args[l],files[j]->d_name,sizeof(files[j]->d_name));l++;}
+        }
+        for(int j=0;j<l;j++)printf("%s\n",args[j]);
+        commandHandler(args);
+
     } else {
         // If none of the preceding commands were used, we invoke the
         // specified program. We have to detect I/O redirection.
