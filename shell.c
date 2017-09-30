@@ -467,7 +467,7 @@ int commandHandler(char *args[]) {
         args[0] = "rm";
         for (i = 2; i < count; ++i){
             flag=0;
-            for(j = 2;j<k;j++){
+            for(j = 0;j<k;j++){
                 if(strcmp(files[i]->d_name,file[j])==0)flag=1;
             }
             if(flag==0){(args[l]=files[i]->d_name);l++;}
