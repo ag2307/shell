@@ -447,6 +447,7 @@ int commandHandler(char *args[]) {
         }
     }
     else if (strcmp(args[0], "rmexcept") == 0) {
+
         int count, i, k = 0, j, l = 1, flag = 0;
         struct stat path_stat;
         struct dirent **files;
@@ -454,8 +455,10 @@ int commandHandler(char *args[]) {
         getcwd(pathname, 1024);
         count = scandir(pathname, &files, NULL, alphasort);
         char file[20][10000] = {NULL};
-        while (args[k + 1] != NULL){
-            strcat(file[k], args[k+1]);
+
+        while (args[k + 1] != NULL) {
+            strcat(file[k], args[k + 1]);
+
             //printf("%s\n",file[k]);
             k++;
         }
@@ -476,6 +479,18 @@ int commandHandler(char *args[]) {
                     printf("error\n");
                     return -1;
                 }
+
+
+                if (S_ISREG(path_stat.st_mode)) {
+                    args[l] = files[i]->d_name;
+                    l++;
+                }
+
+            }}
+            for (int j = 0; j < l; j++)printf("%s\n", args[j]);
+            commandHandler(args);
+
+
 
                 if (S_ISREG(path_stat.st_mode)) {
                     args[l] = files[i]->d_name;
