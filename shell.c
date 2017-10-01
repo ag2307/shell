@@ -362,14 +362,14 @@ int commandHandler(char *args[]) {
                 //Acquire File Path
                 if (strpbrk(args[2], "/")) {
                     while (args[i + 2] != NULL) {
-                        strcat(file[i], args[i+2]);
+                        strcat(file[i], args[i + 2]);
                         i++;
                     }
                 } else {
                     while (args[i + 2] != NULL) {
                         getcwd(file[i], 1000);
                         strcat(file[i], "/");
-                        strcat(file[i], args[i+2]);
+                        strcat(file[i], args[i + 2]);
                         i++;
                     }
                 }
@@ -428,7 +428,7 @@ int commandHandler(char *args[]) {
             //if no option is specified
         else {
             while (args[i + 1] != NULL) {
-                strcat(file[i], args[i+1]);
+                strcat(file[i], args[i + 1]);
                 i++;
             }
             for (int j = 0; j < i; j++) {
@@ -447,7 +447,8 @@ int commandHandler(char *args[]) {
         }
     }
     else if (strcmp(args[0], "rmexcept") == 0) {
-        int count, i,k=0,j,l=1,flag=0;
+        int count, i, k = 0, j, l = 1, flag = 0;
+        struct stat path_stat;
         struct dirent **files;
         char pathname[1000];
         getcwd(pathname, 1024);
@@ -465,15 +466,26 @@ int commandHandler(char *args[]) {
         }
         char *args[LIMIT];
         args[0] = "rm";
-        for (i = 2; i < count; ++i){
-            flag=0;
-            for(j = 0;j<k;j++){
-                if(strcmp(files[i]->d_name,file[j])==0)flag=1;
+        for (i = 2; i < count; ++i) {
+            flag = 0;
+            for (j = 0; j < k; j++) {
+                if (strcmp(files[i]->d_name, file[j]) == 0)flag = 1;
             }
-            if(flag==0){(args[l]=files[i]->d_name);l++;}
-        }
-        for(int j=0;j<l;j++)printf("%s\n",args[j]);
-        commandHandler(args);
+            if (flag == 0) {
+                if (stat(files[i]->d_name, &path_stat) != 0) {
+                    printf("error\n");
+                    return -1;
+                }
+
+                if (S_ISREG(path_stat.st_mode)) {
+                    args[l] = files[i]->d_name;
+                    l++;
+                }
+
+            }}
+            for (int j = 0; j < l; j++)printf("%s\n", args[j]);
+            commandHandler(args);
+
 
     }
     else {
