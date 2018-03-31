@@ -1,6 +1,9 @@
 # shell
 Shell implemented in C language
 ==============
+**Recent Update** : All parts works great but limited time execution(FileIO_Limited) i.e. `<program_name> m` has issues with it. In the implementation, the output from program is firstly transferred to a file named std_output.txt and then read from there to the console which takes a larger amount of time then the time specified in the terminal as an argument. Reason behind that is 'EXTRA WRITE TIME' in writing to the file std_output.txt.
+
+*This issue can be solved very easily by not calling dup2() for output to file in FileIO_Limited. Any help in correcting the code will be appreciated.*   
 
 Team Members:
 1) **Abhinav Gupta**: Implementation of `cd`,`ls`,`history`,`issue`,`<program_name>` and `exit` commands.
