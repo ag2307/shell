@@ -63,7 +63,7 @@ make
 
 * `shell.c`  - main file with full shell code with signal handling, etc.
 * `util.h`   - supporting header file containing declaration of certain functions and variables
-* `in-out.cpp` and `infinite.cpp - codes for testing
+* `in-out.cpp` and `infinite.cpp` - codes for testing
 * `in-out`, `infinite` and `shell` - executable files
 * `input.txt` and `output.txt` - sample files for input and output redirection
 * `Makefile` - Compilation code
