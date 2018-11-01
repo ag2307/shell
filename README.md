@@ -10,6 +10,8 @@ make
 ./shell
 ```
 
+==============
+
 **Features**: :clipboard::clipboard:
 
 * Basic commands allowed: `pwd`, `clear`, `ls` , `cd`, `<program_name>` and `<program_name> m`
