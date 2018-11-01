@@ -3,7 +3,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <signal.h>
+#include <limits.h>
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <termios.h>
@@ -89,7 +91,6 @@ int changeDirectory(char *args[]) {
 */
 void fileIO(char *args[], char *inputFile, char *outputFile, int option) {
 
-    int err = -1;
 
     int fileDescriptor; // between 0 and 19, describing the output or input file
     pid = fork();
@@ -97,112 +98,119 @@ void fileIO(char *args[], char *inputFile, char *outputFile, int option) {
         printf("Child process could not be created\n");
         return;
     }
+    int flag = 0;
     if (pid == 0) {
         // Option 0: output redirection
         if (option == 0) {
+            // We open file for read only (it's STDIN)
+            fileDescriptor = open(inputFile, O_RDONLY, 0600);
+            if(fileDescriptor == -1)
+                flag = 1;
+            // We replace de standard input with the appropriate file
+            dup2(fileDescriptor, STDIN_FILENO);
+            close(fileDescriptor);
+        } 
+        else if (option == 1) {
             // We open (create) the file truncating it at 0, for write only
             fileDescriptor = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+            if(fileDescriptor == -1)
+                flag = 1;
             // We replace de standard output with the appropriate file
             dup2(fileDescriptor, STDOUT_FILENO);
             close(fileDescriptor);
             // Option 1: input and output redirection
-        } else if (option == 1) {
+        } 
+        else if (option == 2) {
             // We open file for read only (it's STDIN)
             fileDescriptor = open(inputFile, O_RDONLY, 0600);
+            if(fileDescriptor == -1)
+                flag = 1;
             // We replace de standard input with the appropriate file
             dup2(fileDescriptor, STDIN_FILENO);
             close(fileDescriptor);
             // Same as before for the output file
             fileDescriptor = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+            if(fileDescriptor == -1)
+                flag = 1;
             dup2(fileDescriptor, STDOUT_FILENO);
             close(fileDescriptor);
         }
 
         setenv("parent", getcwd(currentDirectory, 1024), 1);
-
-        if (execvp(args[0], args) == err) {
-            printf("err");
+        
+        if (flag == 1 || execvp(args[0], args) < 0) {
+            printf("Wrong arguments/command\n");
             kill(getpid(), SIGTERM);
         }
     }
     waitpid(pid, NULL, 0);
 }
 
-pid_t child_pid;
-
 void kill_child(int sig)
 {
-	kill(child_pid,SIGKILL);
+	kill(pid,SIGKILL);
 }
 
-void fileIO_limited(char *args[], char *inputFile, char *outputFile, int option,int m) {
-
-    int err = -1;
+void fileIO_limited(char *args[], char *inputFile, char *outputFile, int option, int m) {
 
     int fileDescriptor; // between 0 and 19, describing the output or input file
     signal(SIGALRM,(void (*)(int))kill_child);
-    child_pid = fork();
-    if (child_pid == -1) {
+    pid = fork();
+    if (pid == -1) {
         printf("Child process could not be created\n");
         return;
     }
-    if (child_pid == 0) {
+    int flag = 0;
+    if (pid == 0) {
         // Option 0: output redirection
         if (option == 0) {
+            // We open file for read only (it's STDIN)
+            fileDescriptor = open(inputFile, O_RDONLY, 0600);
+            if(fileDescriptor == -1)
+                flag = 1;
+            // We replace de standard input with the appropriate file
+            dup2(fileDescriptor, STDIN_FILENO);
+            close(fileDescriptor);
+        } 
+        else if (option == 1) {
             // We open (create) the file truncating it at 0, for write only
             fileDescriptor = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+            if(fileDescriptor == -1)
+                flag = 1;
             // We replace de standard output with the appropriate file
             dup2(fileDescriptor, STDOUT_FILENO);
             close(fileDescriptor);
             // Option 1: input and output redirection
-        } else if (option == 1) {
+        } 
+        else if (option == 2) {
             // We open file for read only (it's STDIN)
             fileDescriptor = open(inputFile, O_RDONLY, 0600);
+            if(fileDescriptor == -1)
+                flag = 1;
             // We replace de standard input with the appropriate file
             dup2(fileDescriptor, STDIN_FILENO);
             close(fileDescriptor);
             // Same as before for the output file
             fileDescriptor = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+            if(fileDescriptor == -1)
+                flag = 1;
             dup2(fileDescriptor, STDOUT_FILENO);
             close(fileDescriptor);
         }
 
         setenv("parent", getcwd(currentDirectory, 1024), 1);
-
-        if (execvp(args[0], args) == err) {
-            printf("err");
+        if (flag == 1 || execvp(args[0], args) < 0) {
+            printf("Wrong arguments/command\n");
             kill(getpid(), SIGTERM);
         }
     }
     alarm(m);
-    waitpid(child_pid, NULL, 0);
-}
-
-void print_to_stdout(){
-    FILE *fptr;
-    char c;
-    
-       // Open file
-       fptr = fopen("std_output.txt", "r");
-       if (fptr == NULL)
-       {
-           printf("Cannot open file \n");
-           exit(0);
-       }
-    
-       // Read contents from file
-       c = fgetc(fptr);
-       while (c != EOF)
-       {
-           printf ("%c", c);
-           c = fgetc(fptr);
-       }
-       fclose(fptr);
+    waitpid(pid, NULL, 0);
 }
 
 /*
- * Remove Function */
-int removeFile(char *file) {
+ * Remove file */
+void removeFile(char *file) {
     int ret = remove(file);
     if (ret == 0) {
         printf("File deleted successfully\n");
@@ -255,45 +263,12 @@ int removeDirectory(const char *path) {
 * Method used to handle the commands entered via the standard input
 */
 int commandHandler(char *args[]) {
-    int i = 0;
-    int j = 0;
-
-    int fileDescriptor;
-    int standardOut;
-
-    int aux;
-
-    char *args_aux[256];
-
-    // We look for the special characters and separate the command itself
-    // in a new array for the arguments
-    while (args[j] != NULL) {
-        if ((strcmp(args[j], ">") == 0) || (strcmp(args[j], "<") == 0) || (strcmp(args[j], "&") == 0)) {
-            break;
-        }
-        args_aux[j] = args[j];
-        j++;
-    }
 
     // 'exit' command quits the shell
     if (strcmp(args[0], "exit") == 0) exit(0);
         // 'pwd' command prints the current directory
     else if (strcmp(args[0], "pwd") == 0) {
-        if (args[j] != NULL) {
-            // If we want file output
-            if ((strcmp(args[j], ">") == 0) && (args[j + 1] != NULL)) {
-                fileDescriptor = open(args[j + 1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
-                // We replace de standard output with the appropriate file
-                standardOut = dup(STDOUT_FILENO);    // first we make a copy of stdout
-                // because we'll want it back
-                dup2(fileDescriptor, STDOUT_FILENO);
-                close(fileDescriptor);
-                printf("%s\n", getcwd(currentDirectory, 1024));
-                dup2(standardOut, STDOUT_FILENO);
-            }
-        } else {
-            printf("%s\n", getcwd(currentDirectory, 1024));
-        }
+        printf("%s\n", getcwd(currentDirectory, 1024));
     }
         // 'clear' command clears the screen
     else if (strcmp(args[0], "clear") == 0) system("clear");
@@ -312,8 +287,10 @@ int commandHandler(char *args[]) {
             perror("No files in this directory\n");
             return -1;
         }
-        for (i = 0; i < count; ++i)
-            printf("%s\n", files[i]->d_name);
+        for (i = 0; i < count; ++i){
+            if((files[i]->d_name)[0] != '.')
+                printf("%s\n", files[i]->d_name);
+        }
     }
         /*history n : Prints the most recent n commands issued by the numbers. If n is omitted, prints all commands issued by the user.*/
     else if (strcmp(args[0], "history") == 0) {
@@ -347,8 +324,8 @@ int commandHandler(char *args[]) {
         printf("\n");
     }  
     else if (strcmp(args[0], "rm") == 0) {
-        char tag = NULL;
-        char file[20][10000] = {NULL};
+        char tag ;
+        char file[20][10000];
         struct stat path_stat;
         int i = 0;
         if (args[1][0] == '-') {
@@ -452,7 +429,7 @@ int commandHandler(char *args[]) {
         char pathname[1000];
         getcwd(pathname, 1024);
         count = scandir(pathname, &files, NULL, alphasort);
-        char file[20][10000] = {NULL};
+        char file[20][10000] ;
         while (args[k + 1] != NULL){
             strcat(file[k], args[k+1]);
             //printf("%s\n",file[k]);
@@ -479,73 +456,59 @@ int commandHandler(char *args[]) {
     else {
         // If none of the preceding commands were used, we invoke the
         // specified program. We have to detect I/O redirection.
-        int m,m_ind;
-        for(i=0;;i++)
-        {
-            if(args[i+1] == NULL){
-            m_ind=i;
-            m=atoi(args[i]);
-            break;
+        if (args[1] == NULL){
+            fileIO(args, NULL, NULL, 3);
+        }
+        else if(strcmp(args[1], "<") == 0){
+            if(args[2] == NULL){
+                printf("Not enough input arguments\n");
+                return -1;
+            }
+            if(args[3] != NULL && strcmp(args[3], ">") == 0){
+                if(args[4] == NULL){
+                    printf("Not enough output arguments\n");
+                    return -1;
+                }
+                fileIO(args, args[2], args[4], 2);
+            }
+            else{
+                fileIO(args, args[2], NULL, 0);
             }
         }
-        i=j;
-        //printf("%d",m);
-        if(m==0)
-        m_ind=-10;
-        while (args[i] != NULL && m_ind!=i) {
-            if (strcmp(args[i], "<") == 0) {
-                aux = i + 1;
-                if(args[i+1] == NULL){
+        else if(strcmp(args[1], ">") == 0){
+            if(args[2] == NULL){
+                printf("Not enough output arguments\n");
+                return -1;
+            }
+            fileIO(args, NULL, args[2], 1);
+        }
+        else{
+            if (args[2] == NULL){
+                fileIO_limited(args, NULL, NULL, 3, atoi(args[1]));
+            }
+            else if(strcmp(args[2], "<") == 0){
+                if(args[3] == NULL){
                     printf("Not enough input arguments\n");
                     return -1;
                 }
-
-                if (args[i+2] == NULL || i+2==m_ind) {
-                    if(m==0)
-                    fileIO(args_aux, args[i+1], "std_output.txt", 1);
-                    else
-                    fileIO_limited(args_aux, args[i+1], "std_output.txt", 1,m);
-                    //print output.txt
-                    print_to_stdout();
-                    return 1;
-                } else {
-                    if (strcmp(args[i + 1], ">") != 0) {
-                        printf("Usage: Expected '>' and found %s\n", args[aux + 1]);
-                        return -2;
-                    }
-                    else if(args[i+3] == NULL || m_ind==i+3){
+                if(args[4] != NULL && strcmp(args[4], ">") == 0){
+                    if(args[5] == NULL){
                         printf("Not enough output arguments\n");
                         return -1;
                     }
+                    fileIO_limited(args, args[3], args[5], 2, atoi(args[1]));
                 }
-                if(m==0)
-                fileIO(args_aux, args[i + 1], args[i + 3], 1);
-                else
-                fileIO_limited(args_aux, args[i + 1], args[i + 3], 1, m);
-                return 1;
+                else{
+                    fileIO_limited(args, args[3], NULL, 0, atoi(args[1]));
+                }
             }
-                // If '>' is detected, we have output redirection.
-                // First we check if the structure given is the correct one,
-                // and if that is the case we call the appropriate method
-            else if (strcmp(args[i], ">") == 0) {
-                if (args[i + 1] == NULL) {
-                    printf("Not enough input arguments\n");
+            else if(strcmp(args[2], ">") == 0){
+                if(args[3] == NULL){
+                    printf("Not enough output arguments\n");
                     return -1;
                 }
-                if(m==0)
-                fileIO(args_aux, NULL, args[i + 1], 0);
-                else
-                fileIO_limited(args_aux, NULL, args[i + 1], 0, m);
-                return 1;
+                fileIO_limited(args, NULL, args[3], 1, atoi(args[1]));
             }
-            i++;
-        }
-        if(i==j){
-            if(m==0)
-            fileIO(args_aux, NULL, "std_output.txt", 0);
-            else
-            fileIO_limited(args_aux, NULL, "std_output.txt",0, m);
-            print_to_stdout();
         }
     }
     return 1;
@@ -601,6 +564,5 @@ int main(int argc, char *argv[], char **envp) {
         printf("\n");
 
     }
-
     exit(0);
 }
